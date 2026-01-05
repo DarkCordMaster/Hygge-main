@@ -1,0 +1,324 @@
+@charset "UTF-8";
+
+body {
+	font-family: Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+.body-container {
+	max-width: 1200px; /* 중앙 정렬 및 여백 조절 */
+	margin: 0 auto; /* 좌우 여백 균등 */
+}
+
+/* 검색바 */
+.search-bar {
+   display: flex;
+   justify-content: center;
+   padding: 10px 0;
+   margin: 10px auto;
+   width: 1200px; /* 고정 너비 추가 */
+   max-width: 100%; /* 화면보다 커지지 않도록 제한 */
+}
+
+.search-bar input {
+   width: 1200px; /* 고정 너비로 변경 (50%에서 600px로) */
+   max-width: 90%; /* 작은 화면에서 너무 넓어지지 않도록 제한 */
+   padding: 10px;
+   border: 6px solid #82B10C;
+   border-radius: 25px;
+}
+
+.search-bar input {
+  width: 1200px;
+  max-width: 90%;
+  padding: 10px;
+  border: 6px solid #82B10C;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+  border-color: #82B10C;
+  box-shadow: 0 0 8px #82B10C, 0 0 12px rgba(130, 177, 12, 0.5);
+  outline: none;
+}
+
+
+/* 헤더 및 카테고리 */
+.categories {
+	display: flex;
+	justify-content: center;
+	gap: 15px;
+	margin: 20px 0;
+}
+
+.categories div {
+	cursor: pointer;
+	padding: 10px 20px;
+	border-radius: 50px;
+	transition: background-color 0.4s;
+}
+
+.categories div>img {
+	width: 90px;
+}
+
+.categories div>p {
+	display: flex;
+	justify-content: center;
+}
+
+/* 마감일 */
+/*  .lastBtn>p {
+	margin-top: 6px;
+	padding: 0 8px;
+	border-bottom: 3px solid #678C09;
+	display: inline-block;
+	font-size: 20px;
+	font-weight: bold;
+	color: #678C09;
+} */
+
+/* .pundingBtn>.reserve {
+	margin-top: 15px;
+	width: 80px;
+	padding-left: 3px;
+	border-radius: 3px;
+	background-color: #F2F4E3;
+} */
+.goal {
+  display: flex;
+  align-items: center; /* 세로 중앙 정렬 */
+}
+
+.goal>p {
+	margin-top: 15px;
+	width: auto;
+	font-size: 20px;
+	font-weight: bold;
+	color: #ED2323;
+	line-height: 50%; /* 행 간격 */
+	margin-right: 57px;
+}
+
+.goal > span {
+  font-size: 19px;
+  font-weight: bold;
+  color: #ED2323;
+  display: inline-block;
+  padding: 3px 5px;
+}
+
+
+/* 신규 프로젝트 */
+.new-project>h3 {
+	font-size: 24px;
+	font-weight: bold;
+}
+
+.new-project {
+    width: 100%;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.new-project .row {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.newP {
+	padding: 10px;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 18px;
+	width: 33.33%; /* col-4에 맞게 33.33% 설정 */
+    box-sizing: border-box;
+}
+
+.newP .image-container {
+    width: 100%;
+    display: block;
+}
+
+.newP .image-container img {
+    width: 100%;
+    height: 190px;
+    border-radius: 5px;
+    object-fit: cover;
+}
+
+.newP>img {
+	width: 275px;
+	height: 190px;
+	border-radius: 5px;
+}
+
+/* 실시간 랭킹 */
+.lanking-bar {
+	height: 700px;
+	margin-left: 30px;
+}
+
+.lanking-bar>h3 {
+	margin-top: 30px;
+	margin-bottom: 20px;
+	font-size: 24px;
+	font-weight: bold;
+}
+
+.lankImg>img {
+	width: 120px;
+	height: 80px;
+	border-radius: 5px;
+}
+
+/* 이벤트 이미지 */
+.special {
+  margin-top: 200px;
+}
+
+.special > img {
+  width: 343px;
+  margin-top: 25px;
+  margin-bottom: 30px;
+  margin-left: 30px;
+  border-radius: 5px;
+}
+
+/* 특정 캐러셀에만 적용되도록 선택자를 구체화 */
+.special #carouselExampleFade .carousel-inner img {
+  width: 343px !important;
+  margin-top: 25px;
+  margin-bottom: 30px;
+  margin-left: 30px;
+  border-radius: 5px;
+  height: auto;
+}
+
+/* 특정 캐러셀의 w-100 클래스만 재정의 */
+.special #carouselExampleFade .carousel-inner .w-100 {
+  width: 343px !important;
+}
+
+/* 다시보기 */
+/* 신규 프로젝트 */
+.newP {
+    width: 275px;
+    box-sizing: border-box;
+}
+
+.image-newP {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-newP img {
+    width: 100%;
+    height: 190px;;
+    display: block;
+    border-radius: 5px;
+}
+
+/* 좋아요 */
+.image-newP i {
+    position: absolute;
+    right: 10px;
+    bottom: 4px;
+    font-size: 24px;
+    color: white;
+    padding: 5px;
+}
+
+
+.popular-project, .deadline-project, .release-project,
+	.localstorage-project {
+	margin-top: 80px;
+}
+
+.popular-project>h3, .deadline-project>h3, .release-project>h3,
+	.localstorage-project>h3 {
+	font-size: 24px;
+	font-weight: bold;
+}
+
+.popularP, .deadlineP, .releaseP, .localP {
+	padding: 10px;
+	border-radius: 10px;
+	cursor: pointer;
+	font-size: 18px; /* 펀딩 & 제목 글씨 크기 */
+}
+
+.image-container {
+    position: relative;
+    display: inline-block; /* 이미지 크기에 맞게 컨테이너 크기 조정 */
+}
+
+.image-container img {
+    width: 275px;
+	height: 190px;
+	border-radius: 5px;
+}
+
+/* 좋아요 */
+.image-container i {
+    position: absolute;
+    right: 10px;
+    bottom: 4px;
+    font-size: 22px; /* 아이콘 크기 조정 */
+    color: red; /* 하트 색상 */
+    padding: 5px;
+}
+
+.release-project {
+	margin-bottom: 80px;
+}
+
+.pundingImg>img {
+	width: 1200px;
+	margin-bottom: 100px;
+}
+
+/* !!!!수정 필요!!!! */
+/* 하위 카테고리 스타일 */
+.hr {
+	margin: 0;
+	padding: 0;
+}
+
+.sub-categories {
+	display: none;
+	background-color: #f8f9fa;
+	padding: 10px 15px;
+	border-top: 1px solid #ddd;
+}
+
+.sub-categories h4 {
+	margin: 0 0 8px 0;
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.sub-categories ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.sub-categories li {
+	margin-right: 15px;
+	font-size: 14px;
+	cursor: pointer;
+}
+
+.sub-categories li:hover {
+	text-decoration: underline;
+}

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.admin.mapper.MemberManageMapper">
+
+<select id="normalMember" parameterType="map" resultType="com.sp.app.admin.model.MemberManage">
+    SELECT * FROM (
+        SELECT ROWNUM rnum, tb.* FROM (
+            SELECT m1.memberIdx, m1.name, m1.nickName, m1.reg_date, m1.block,
+                   m1.last_login, m1.mod_date, m2.email1, m2.email2, m2.birth,
+                   m2.addr1, m2.addr2, m2.tel1, m2.tel2, m2.tel3, m2.age,
+                   m2.gender, COUNT(r.num) as report_count
+            FROM member1 m1
+            JOIN memberAuthority ma ON m1.memberIdx = ma.memberIdx
+            LEFT OUTER JOIN member2 m2 ON m1.memberIdx = m2.memberIdx
+            LEFT OUTER JOIN Report r ON m1.memberIdx = r.memberIdx
+            WHERE ma.Authority = #{authority}
+            <if test="kwd != null and kwd != ''">
+                <choose>
+                    <when test="schType == 'name'">
+                        AND INSTR(m1.name, #{kwd}) > 0
+                    </when>
+                    <when test="schType == 'email'">
+                        AND (INSTR(m2.email1, #{kwd}) > 0 OR INSTR(m2.email2, #{kwd}) > 0)
+                    </when>
+                    <when test="schType == 'reg_date'">
+                        AND TO_CHAR(m1.reg_date, 'YYYY-MM-DD') = #{kwd}
+                    </when>
+                </choose>
+            </if>
+            GROUP BY m1.memberIdx, m1.name, m1.nickName, m1.reg_date, m1.block,
+                     m1.last_login, m1.mod_date, m2.email1, m2.email2, m2.birth,
+                     m2.addr1, m2.addr2, m2.tel1, m2.tel2, m2.tel3, m2.age, m2.gender
+            ORDER BY m1.memberIdx DESC
+       	) tb WHERE ROWNUM &lt;= #{offset} + #{size}  
+    ) WHERE rnum > #{offset}
+</select>
+
+<update id="block" parameterType="String">
+	UPDATE member1 SET block = 1
+	WHERE memberIdx = #{memberIdx}
+</update>
+
+<update id="unblock" parameterType="String">
+	UPDATE member1 SET block = 0
+	WHERE memberIdx = #{memberIdx}
+</update>
+
+<select id="reportMembers" parameterType="String" resultType="com.sp.app.admin.model.MemberManage">
+    SELECT m1.memberIdx, m1.name, m1.nickName, m1.reg_date, m1.block, m1.last_login, m1.mod_date,
+           m2.email1, m2.email2, m2.birth, m2.addr1, m2.addr2, m2.tel1, m2.tel2, m2.tel3, m2.age, m2.gender,
+           COUNT(r.num) as report_count
+    FROM member1 m1
+    JOIN memberAuthority ma ON m1.memberIdx = ma.memberIdx
+    LEFT OUTER JOIN member2 m2 ON m1.memberIdx = m2.memberIdx
+    LEFT OUTER JOIN Report r ON m1.memberIdx = r.memberIdx
+    WHERE ma.Authority = #{authority}
+    GROUP BY m1.memberIdx, m1.name, m1.nickName, m1.reg_date, m1.block, m1.last_login, m1.mod_date,
+             m2.email1, m2.email2, m2.birth, m2.addr1, m2.addr2, m2.tel1, m2.tel2, m2.tel3, m2.age, m2.gender
+    HAVING COUNT(r.num) > 3
+</select>
+
+<select id="dataCount" parameterType="map" resultType="Integer">
+    SELECT NVL(COUNT(DISTINCT m1.memberIdx), 0)
+    FROM member1 m1
+    JOIN memberAuthority ma ON m1.memberIdx = ma.memberIdx
+    LEFT OUTER JOIN member2 m2 ON m1.memberIdx = m2.memberIdx
+    WHERE ma.Authority = #{authority}
+    <if test="kwd != null and kwd != ''">
+        <choose>
+            <when test="schType == 'name'">
+                AND INSTR(m1.name, #{kwd}) > 0
+            </when>
+            <when test="schType == 'email'">
+                AND (INSTR(m2.email1, #{kwd}) > 0 OR INSTR(m2.email2, #{kwd}) > 0)
+            </when>
+            <when test="schType == 'reg_date'">
+                AND TO_CHAR(m1.reg_date, 'YYYY-MM-DD') = #{kwd}
+            </when>
+        </choose>
+    </if>
+</select>
+
+
+    <select id="getUserProjectRequests" parameterType="map" resultType="com.sp.app.admin.model.MemberManage">
+        SELECT * FROM (
+            SELECT 
+                pr.num as projectNum,
+                m1.memberIdx, 
+                m1.name, 
+                m2.email1, 
+                m2.email2, 
+                m1.reg_date,
+                pr.title as projectTitle,
+                pr.request_date,
+                pr.accept_return,
+                ma.authority,
+                CASE 
+                    WHEN ma.authority = 'USER' THEN '대기중'
+                    WHEN ma.authority = 'MAKER' THEN '승인'
+                    ELSE '기타'
+                END as status,
+                ROWNUM as rnum
+            FROM ProjectRequest pr
+            JOIN member1 m1 ON pr.memberIdx = m1.memberIdx
+            JOIN member2 m2 ON m1.memberIdx = m2.memberIdx
+            JOIN memberAuthority ma ON m1.memberIdx = ma.memberIdx
+            WHERE ma.authority = 'USER' AND accept_return = 1
+            <if test="kwd != null and kwd != ''">
+                <choose>
+                    <when test="schType == 'name'">
+                        AND INSTR(m1.name, #{kwd}) > 0
+                    </when>
+                    <when test="schType == 'email'">
+                        AND (INSTR(m2.email1, #{kwd}) > 0 OR INSTR(m2.email2, #{kwd}) > 0)
+                    </when>
+                    <when test="schType == 'reg_date'">
+                        AND TO_CHAR(m1.reg_date, 'YYYY-MM-DD') = #{kwd}
+                    </when>
+                </choose>
+            </if>
+            ORDER BY pr.request_date DESC
+        )
+        WHERE rnum BETWEEN #{offset} + 1 AND #{offset} + #{size}
+    </select>
+
+    <!-- 메이커 신청한 회원 수 조회 -->
+    <select id="getUserProjectRequestsCount" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM ProjectRequest pr
+        JOIN member1 m1 ON pr.memberIdx = m1.memberIdx
+        JOIN member2 m2 ON m1.memberIdx = m2.memberIdx
+        JOIN memberAuthority ma ON m1.memberIdx = ma.memberIdx
+        WHERE 1=1
+        <if test="kwd != null and kwd != ''">
+            <choose>
+                <when test="schType == 'name'">
+                    AND INSTR(m1.name, #{kwd}) > 0
+                </when>
+                <when test="schType == 'email'">
+                    AND (INSTR(m2.email1, #{kwd}) > 0 OR INSTR(m2.email2, #{kwd}) > 0)
+                </when>
+                <when test="schType == 'reg_date'">
+                    AND TO_CHAR(m1.reg_date, 'YYYY-MM-DD') = #{kwd}
+                </when>
+            </choose>
+        </if>
+    </select>
+    
+       <!-- 데이터 디버깅용 쿼리: 전체 데이터 확인 -->
+    <select id="debugProjectRequestData" resultType="map">
+        SELECT 
+            pr.num as projectNum,
+            m1.memberIdx, 
+            m1.name, 
+            m2.email1, 
+            m2.email2, 
+            m1.reg_date,
+            pr.title as projectTitle,
+            ma.authority
+        FROM ProjectRequest pr
+        JOIN member1 m1 ON pr.memberIdx = m1.memberIdx
+        JOIN member2 m2 ON m1.memberIdx = m2.memberIdx
+        JOIN memberAuthority ma ON m1.memberIdx = ma.memberIdx
+    </select>
+    
+    <update id="approve" parameterType="Long">
+    	UPDATE memberAuthority 
+    	SET authority = 'MAKER'
+    	WHERE memberIdx = #{memberIdx}
+    </update>
+    
+    <update id="reject" parameterType="map">
+UPDATE ProjectRequest pr
+SET pr.accept_return = 0
+WHERE pr.memberIdx = #{memberIdx} 
+  AND pr.num = #{projectNum} 
+  AND EXISTS (
+    SELECT 1 
+    FROM MemberAuthority ma 
+    WHERE ma.memberIdx = pr.memberIdx 
+    AND ma.authority = 'USER'
+  )
+    </update>
+</mapper>

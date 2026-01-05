@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.FundingMainMapper">
+
+	<sql id="where-list">
+		<if test="menu == 'category'">
+			(pr.category_num = #{flag} OR c.parent_num = #{flag})
+		</if>
+		<if test="menu == 'hotContent'">
+			pl.likeCount >= 10
+		</if>
+		<if test="menu == 'new'">
+			(SYSDATE - p.start_date &gt;= 0 AND SYSDATE - p.start_date &lt;= 7)
+		</if>
+		<if test="menu == 'deadline'">
+			(payment_summary.total_amount / target * 100 &gt;= 85 OR p.end_date - SYSDATE &lt;= 5) 
+		</if>
+		<if test="menu == 'comingsoon'">
+			(p.start_date &gt; SYSDATE AND p.start_date - SYSDATE &lt;= 7)
+		</if>
+	</sql>
+	<sql id="order-list">
+		<if test="order == 'latest'">
+			p.start_date DESC, p.num DESC
+		</if>
+		<if test="order == 'popular'">
+			total_amount DESC
+		</if>
+		<if test="order == 'deadline'">
+			total_amount DESC, end_date ASC
+		</if>
+	</sql>
+
+	<select id="listFunding" parameterType="map" resultType="com.sp.app.model.Funding">
+		SELECT p.num num, title, thumbnail, project_info, target, payment_summary.total_amount total_amount, p.end_date end_date
+		FROM project p
+		JOIN projectRequest pr ON p.num = pr.num
+		LEFT OUTER JOIN category c ON pr.category_num = c.category_num
+		LEFT OUTER JOIN
+			(SELECT pd.num, SUM(s.sum) AS total_amount
+		    FROM product pd
+		    LEFT JOIN sales s ON pd.product_num = s.product_num
+		    GROUP BY pd.num) payment_summary ON p.num = payment_summary.num
+    	LEFT OUTER JOIN (SELECT num, COUNT(*) likeCount FROM projectLike GROUP BY num) pl ON pl.num = p.num
+		<where>
+			<if test="menu != null and menu != ''">
+				<include refid="where-list"/>
+			</if>
+			AND p.end_date > SYSDATE AND p.block = 0
+		</where>
+		ORDER BY <include refid="order-list"/>
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+
+	<select id="dataCountFunding" parameterType="map" resultType="Integer">
+		SELECT COUNT(*)
+		FROM project p
+		LEFT OUTER JOIN projectRequest pr ON p.num = pr.num
+		LEFT OUTER JOIN category c ON pr.category_num = c.category_num
+		LEFT OUTER JOIN (SELECT num, COUNT(*) likeCount FROM projectLike GROUP BY num) pl ON pl.num = p.num
+		LEFT OUTER JOIN
+			(SELECT pd.num, SUM(s.sum) AS total_amount
+		    FROM product pd
+		    LEFT JOIN sales s ON pd.product_num = s.product_num
+		    GROUP BY pd.num) payment_summary ON p.num = payment_summary.num
+		<where>
+			<if test="menu != null and menu != ''">
+				<include refid="where-list"/>
+			</if>
+			AND p.end_date > SYSDATE AND p.block = 0
+		</where>
+	</select>
+
+	<select id="isUserLiked" parameterType="map" resultType="Integer">
+		SELECT COUNT(*)
+		FROM projectLike
+		WHERE num = #{num} AND memberIdx = #{memberIdx}
+	</select>
+
+	<insert id="insertFundingLike" parameterType="map">
+		INSERT INTO projectLike (num, memberIdx) VALUES (#{num}, #{memberIdx})
+	</insert>
+
+	<delete id="deleteFundingLike" parameterType="map">
+		DELETE FROM projectLike WHERE num = #{num} AND memberIdx = #{memberIdx}
+	</delete>
+
+	<select id="listReview" parameterType="Long" resultType="com.sp.app.model.Review">
+		SELECT review_num, r.content content, r.grade, m1.nickName, TO_CHAR(r.reg_date, 'YYYY-MM-DD') reg_date, m1.profile_img, m1.memberIdx
+		FROM review r
+		JOIN sales s ON r.sales_num = s.num
+		JOIN payment p ON s.payment_num = p.payment_num
+		JOIN member1 m1 ON m1.memberIdx = p.memberIdx
+		WHERE project_num = #{num}
+		ORDER BY reg_date DESC
+	</select>
+
+	<select id="fundingContent" parameterType="Long" resultType="String">
+		SELECT content
+		FROM projectRequest
+		WHERE num = #{num}
+	</select>
+
+	<select id="listReviewPhoto" parameterType="Long" resultType="String">
+		SELECT s_FileName
+		FROM reviewPhoto
+		WHERE review_num = #{num}
+	</select>
+</mapper>

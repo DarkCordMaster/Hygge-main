@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.MakerMapper">
+
+	<select id="getPR_SEQ" resultType="Long">
+		SELECT project_request_seq.NEXTVAL FROM dual
+	</select>
+	<select id="listCategory" parameterType="Long" resultType="com.sp.app.model.Category">
+		SELECT category_num, parent_num, name
+		FROM category
+		WHERE parent_num = #{num}
+	</select>
+
+	<insert id="insertTempProjectRequest" parameterType="com.sp.app.model.Funding">
+		INSERT INTO ProjectRequest (num, memberIdx, request_date, title, business, content, target, term, thumbnail, category_num, project_info, delivery_info, delivery_fee, submit)
+			VALUES (#{num}, #{memberIdx}, SYSDATE, #{title}, #{business}, #{content}, #{target}, #{term}, #{thumbnail}, #{category_num}, #{project_info}, #{delivery_info}, #{delivery_fee}, 0)
+	</insert>
+
+	<insert id="insertProjectPhoto" parameterType="com.sp.app.model.Funding">
+		INSERT INTO ProjectPhoto(photo_num, s_FileName, photo_order, num)
+			VALUES (project_photo_seq.NEXTVAL, #{sfileName}, #{photo_order}, #{num})
+	</insert>
+
+	<insert id="insertProduct" parameterType="map">
+		INSERT INTO Product (product_num, price, stock, detail, title, origin, num)
+			VALUES (product_seq.NEXTVAL, #{price}, #{stock}, #{detail}, #{title}, #{origin}, #{num})
+	</insert>
+
+	<select id="isMaker" parameterType="Long" resultType="com.sp.app.model.Maker">
+		SELECT m.memberIdx memberIdx, introduction, bankAccount, makerName, profile_img
+		FROM maker m
+		JOIN member1 m1 ON m.memberIdx = m1.memberIdx
+		WHERE m.memberIdx = #{memberIdx}
+	</select>
+
+	<update id="updateProfile" parameterType="map">
+		UPDATE member1 SET profile_img = #{profile_img} WHERE memberIdx = #{memberIdx}
+	</update>
+
+	<insert id="insertMaker" parameterType="com.sp.app.model.Maker">
+		INSERT INTO Maker (memberIdx, introduction, bankAccount, makerName)
+			VALUES (#{memberIdx}, #{introduction}, #{bankAccount}, #{makerName})
+	</insert>
+
+	<update id="updateMaker" parameterType="com.sp.app.model.Maker">
+		UPDATE Maker SET introduction = #{introduction}, bankAccount = #{bankAccount}, makerName = #{makerName} WHERE memberIdx = #{memberIdx}
+	</update>
+
+	<update id="insertProjectRequest" parameterType="Long">
+		UPDATE ProjectRequest SET submit = 1 WHERE num = #{num}
+	</update>
+</mapper>

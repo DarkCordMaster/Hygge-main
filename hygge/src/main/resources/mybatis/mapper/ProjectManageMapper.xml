@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.admin.mapper.ProjectManageMapper">
+<select id="projectList" parameterType="map" resultType="com.sp.app.admin.model.ProjectManage">
+    SELECT num, memberIdx, request_date, accept_date, title, business, content, target, 
+           term, thumbnail, category_num, accept_return, return_reason
+    FROM projectRequest
+    WHERE submit = 1
+    <where>
+        <if test="kwd != null and kwd != ''">
+            <choose>
+                <when test="schType == 'title'">
+                    AND INSTR(title, #{kwd}) > 0
+                </when>
+                <when test="schType == 'request_date'">
+                    AND TO_CHAR(request_date, 'YYYY-MM-DD') = #{kwd}
+                </when>
+                <when test="schType == 'accept_date'">
+                    AND TO_CHAR(accept_date, 'YYYY-MM-DD') = #{kwd}
+                </when>
+                <when test="schType == 'category'">
+                    AND category_num = #{kwd}
+                </when>
+            </choose>
+        </if>
+    </where>
+    ORDER BY num DESC
+    OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+</select>
+
+<select id="dataCount" parameterType="map" resultType="Integer">
+    SELECT NVL(COUNT(*), 0)
+    FROM ProjectRequest p
+    <where>
+        <if test="kwd != null and kwd != ''">
+            <choose>
+                <when test="schType == 'title'">
+                    AND INSTR(p.title, #{kwd}) > 0
+                </when>
+                <when test="schType == 'request_date'">
+                    AND TO_CHAR(p.request_date, 'YYYY-MM-DD') = #{kwd}
+                </when>
+                <when test="schType == 'accept_date'">
+                    AND TO_CHAR(p.accept_date, 'YYYY-MM-DD') = #{kwd}
+                </when>
+                <when test="schType == 'category'">
+                    AND p.category_num = #{kwd}
+                </when>
+            </choose>
+        </if>
+    </where>
+</select>
+
+<update id="approveProject" parameterType="Long">
+    UPDATE ProjectRequest SET 
+        accept_return = 1,
+        accept_date = SYSDATE
+    WHERE num = #{num}
+</update>
+
+<update id="rejectProject" parameterType="map">
+    UPDATE ProjectRequest SET 
+        accept_return = 0,
+        return_reason = #{reason},
+        accept_date = SYSDATE
+    WHERE num = #{num}
+</update>
+
+	<select id="getUserProjectRequests" parameterType="map" resultType="com.sp.app.admin.model.ProjectManage">
+        SELECT 
+            m1.memberIdx, 
+            m1.name, 
+            m2.email1, 
+            m2.email2, 
+            m1.reg_date,
+            pr.num,
+            pr.title,
+            CASE 
+                WHEN ma.authority = 'USER' THEN '대기중'
+                WHEN ma.authority = 'MAKER' THEN '승인'
+                ELSE '기타'
+            END as status
+        FROM member1 m1
+        JOIN member2 m2 ON m1.memberIdx = m2.memberIdx
+        JOIN memberAuthority ma ON m1.memberIdx = ma.memberIdx
+        JOIN ProjectRequest pr ON m1.memberIdx = pr.memberIdx
+        WHERE ma.authority = 'USER'
+        <if test="kwd != null and kwd != ''">
+            <choose>
+                <when test="schType == 'name'">
+                    AND INSTR(m1.name, #{kwd}) > 0
+                </when>
+                <when test="schType == 'email'">
+                    AND (INSTR(m2.email1, #{kwd}) > 0 OR INSTR(m2.email2, #{kwd}) > 0)
+                </when>
+                <when test="schType == 'reg_date'">
+                    AND TO_CHAR(m1.reg_date, 'YYYY-MM-DD') = #{kwd}
+                </when>
+            </choose>
+        </if>
+        ORDER BY m1.reg_date DESC
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+    <select id="getUserProjectRequestsCount" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM member1 m1
+        JOIN member2 m2 ON m1.memberIdx = m2.memberIdx
+        JOIN memberAuthority ma ON m1.memberIdx = ma.memberIdx
+        JOIN ProjectRequest pr ON m1.memberIdx = pr.memberIdx
+        WHERE ma.authority = 'USER'
+        <if test="kwd != null and kwd != ''">
+            <choose>
+                <when test="schType == 'name'">
+                    AND INSTR(m1.name, #{kwd}) > 0
+                </when>
+                <when test="schType == 'email'">
+                    AND (INSTR(m2.email1, #{kwd}) > 0 OR INSTR(m2.email2, #{kwd}) > 0)
+                </when>
+                <when test="schType == 'reg_date'">
+                    AND TO_CHAR(m1.reg_date, 'YYYY-MM-DD') = #{kwd}
+                </when>
+            </choose>
+        </if>
+    </select>
+    
+    <insert id="insertProject" parameterType="Long">
+    INSERT INTO project (num, start_date, end_date, block)
+    VALUES (#{num}, SYSDATE+7, SYSDATE + 7 + #{term}, 0)
+    </insert>
+
+</mapper>

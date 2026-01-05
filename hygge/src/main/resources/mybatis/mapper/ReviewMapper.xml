@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.ReviewMapper">
+ <!-- 후기 개수를 조회하는 쿼리 -->
+  <select id="reviewCount" resultType="int" parameterType="Long">
+    SELECT COUNT(r.review_num) AS reviewCount
+    FROM member1 m
+    JOIN payment p ON m.memberIdx = p.memberIdx
+    JOIN sales s ON p.payment_num = s.payment_num
+    LEFT JOIN review r ON s.num = r.sales_num
+    WHERE m.memberIdx = #{memberIdx}
+  </select>
+
+  <select id="getReivews" resultType="int" parameterType="Long">
+		SELECT r.sales_num
+        FROM review r
+        JOIN sales s ON r.sales_num = s.num
+        JOIN payment p ON s.payment_num = p.payment_num
+        WHERE p.memberIdx = #{memberIdx}
+</select>
+	<!-- 후기 내용 조회 쿼리 -->
+	<select id="reviewList" parameterType="map" resultType="com.sp.app.model.Review">
+	    SELECT 
+	        r.review_num, 
+	        r.content, 
+	        r.grade, 
+	        p.title, 
+	        r.reg_date, 
+	        pay.pay_amount,
+	        rp.s_filename AS review_img
+	    FROM 
+	        review r
+	    JOIN 
+	        sales s ON r.sales_num = s.num
+	    JOIN 
+	        product p ON s.product_num = p.product_num
+	    JOIN 
+	        payment pay ON s.payment_num = pay.payment_num
+		LEFT OUTER JOIN (
+			SELECT review_num, s_filename FROM (
+				SELECT review_num, s_filename, 
+					ROW_NUMBER() OVER(PARTITION BY review_num ORDER BY reviewphoto_num ASC) rank
+				 FROM reviewphoto
+			) WHERE rank = 1
+		) rp ON r.review_num = rp.review_num	    	
+	    WHERE 
+	        pay.memberIdx = #{memberIdx}
+	</select>
+
+	<delete id="deleteReview" parameterType="Long">
+		DELETE FROM review WHERE review_num = #{num}
+	</delete>
+	
+<insert id="insertReview" parameterType="com.sp.app.model.Review">
+    INSERT INTO review (
+        REVIEW_NUM, 
+        CONTENT, 
+        GRADE, 
+        PROJECT_NUM, 
+        SALES_NUM, 
+        REG_DATE
+    ) VALUES (
+        #{review_num},
+        #{content}, 
+        #{grade}, 
+        #{project_num}, 
+        #{sales_num}, 
+        SYSDATE
+    )
+</insert>
+	<insert id="insertFile" parameterType="map">
+    INSERT INTO ReviewPhoto (reviewphoto_num,s_FileName, review_num)
+    VALUES (REVIEW_PHOTO_SEQ.NEXTVAL, #{sfileName}, #{review_num,jdbcType=NUMERIC})
+</insert>
+
+<select id="listFile" parameterType="Long" resultType="com.sp.app.model.Review">
+SELECT  reviewphoto_num, review_num, s_FileName
+FROM ReviewPhoto
+WHERE review_num = #{review_num}
+</select>
+<select id="reviewSeq" resultType="Long">
+SELECT review_seq.NEXTVAL FROM dual
+</select>
+</mapper>

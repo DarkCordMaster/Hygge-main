@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.TesterMapper">
+
+	<!-- 체험단 상세 정보 -->
+	<select id="testerInfo" parameterType="Long" resultType="com.sp.app.model.TestBoard">
+		<!-- 제목, 사진, 내용 -->
+		SELECT t.tester_num, title, thumbnail, content, t.start_date, t.end_date, t.num
+		FROM TestBoard t
+		INNER JOIN Project p ON t.num = p.num
+		WHERE t.num = #{num}
+	</select>
+
+	<!-- 체험단 신청 -->
+	<insert id="insertTesterForm" parameterType="com.sp.app.model.Tester">
+    INSERT INTO SPONSOR (memberIdx, num, request_date, block)
+   	VALUES (
+   		#{memberIdx},
+   		(SELECT tester_num FROM TestBoard WHERE num = #{num}), 
+       	SYSDATE, 0
+   	)
+	</insert>
+	
+	<!-- 중복 신청 체크 -->
+	<select id="checkTesterApplication" parameterType="map" resultType="integer">
+	    SELECT COUNT(*)
+	    FROM Sponsor
+	    WHERE memberIdx = #{memberIdx}
+	    AND num = (
+	        SELECT tester_num 
+	        FROM TestBoard 
+	        WHERE num = #{num}
+	    )
+	</select>
+    
+    <select id="testBoardList" parameterType="map" resultType="com.sp.app.model.TestBoard">
+    	SELECT tester_num, title, content, thumbnail, accept_date, accept_return, return_reason,
+    		start_date, end_date, request_date, num
+    	FROM testBoard
+        WHERE accept_return = 1
+    </select>
+    
+    <select id="dataCount" parameterType="map" resultType="Integer">
+    SELECT COUNT(*)
+	FROM testBoard
+	WHERE accept_return = 1
+    </select>
+</mapper>

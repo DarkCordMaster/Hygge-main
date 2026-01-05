@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.UsedBoardMapper">
+	<insert id="insertBoard" parameterType="com.sp.app.model.UsedBoard">
+	    INSERT INTO usedBoard(board_num, memberIdx, title, content, reg_date, block, hitCount, category, deal, price, product)
+	    	VALUES (#{num}, #{memberIdx}, #{title}, #{content}, SYSDATE, 0, 0, #{category}, 0, #{price}, #{product})
+	</insert>
+	<insert id="insertBoardFile" parameterType="map">
+		INSERT INTO usedBoardFile(num, board_num, s_FileName) VALUES (used_board_file_seq.NEXTVAL, #{board_num}, #{s_FileName})
+	</insert>
+
+	<sql id="where-list">
+		<choose>
+			<when test="schType == 'all'">
+				(INSTR(title, #{kwd}) &gt; 0 OR INSTR(content, #{kwd}) &gt; 0)
+			</when>
+			<when test="schType == 'userName'">
+				(INSTR(nickName, #{kwd}) &gt; 0)
+			</when>
+			<when test="schType == 'sell'">
+				(category = 0)
+			</when>
+			<when test="schType == 'buy'">
+				(category = 1)
+			</when>
+			<otherwise>
+				INSTR(${schType}, #{kwd}) &gt; 0
+			</otherwise>
+		</choose>
+	</sql>
+
+	<select id="seqValue" resultType="Long">
+		SELECT used_board_seq.NEXTVAL from dual
+	</select>
+
+	<select id="listBoard" parameterType="map" resultType="com.sp.app.model.UsedBoard">
+		SELECT board_num num, m.memberIdx memberIdx, m.nickName nickName, title, content, TO_CHAR(u.reg_date, 'YYYY-MM-DD') reg_date, hitCount, category, deal, price, product
+		FROM usedBoard u
+		JOIN member1 m ON u.memberIdx = m.memberIdx
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="where-list"/>
+			</if>
+			AND m.block = 0 AND u.block = 0
+		</where>
+		ORDER BY board_num DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+
+	<select id="dataCount" parameterType="map" resultType="Integer">
+		SELECT COUNT(*)
+		FROM usedBoard u
+		JOIN member1 m ON m.memberIdx = u.memberIdx
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="where-list"/>
+			</if>
+			AND m.block = 0 AND u.block = 0
+		</where>
+	</select>
+
+	<select id="findById" parameterType="Long" resultType="com.sp.app.model.UsedBoard">
+		SELECT board_num num, m.memberIdx memberIdx, m.nickName nickName, title, content, u.reg_date reg_date, hitCount, category, deal, price, product
+		FROM usedBoard u
+		JOIN member1 m ON m.memberIdx = u.memberIdx AND m.block = 0
+		WHERE board_num = #{num}
+	</select>
+
+	<select id="findFileById" parameterType="Long" resultType="String">
+		SELECT s_FileName
+		FROM usedBoardFile
+		WHERE board_num = #{num}
+	</select>
+
+	<select id="findByPrev" parameterType="map" resultType="com.sp.app.model.UsedBoard">
+		SELECT board_num  num, title
+		FROM usedBoard u
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="where-list"/>
+			</if>
+			AND (board_num &lt; #{num})
+			AND u.block = 0
+		</where>
+		ORDER BY board_num DESC
+		FETCH FIRST 1 ROWS ONLY
+	</select>
+
+	<select id="findByNext" parameterType="map" resultType="com.sp.app.model.UsedBoard">
+		SELECT board_num  num, title
+		FROM usedBoard u
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<include refid="where-list"/>
+			</if>
+			AND (board_num &gt; #{num})
+			AND u.block = 0
+		</where>
+		ORDER BY board_num ASC
+		FETCH FIRST 1 ROWS ONLY
+	</select>
+
+	<delete id="deleteBoard" parameterType="Long">
+		DELETE FROM usedBoard WHERE board_num = #{num}
+	</delete>
+
+	<delete id="deleteBoardFile" parameterType="Long">
+		DELETE FROM usedBoardFile WHERE board_num = #{num}
+	</delete>
+
+	<update id="updateHitCount" parameterType="Long">
+		UPDATE usedBoard SET hitCount = hitCount + 1 WHERE board_num = #{num}
+	</update>
+
+	<insert id="reportUsedBoard" parameterType="com.sp.app.model.Report">
+		INSERT INTO report (num, tablename, reportedNumber, memberIdx, memberIdx2) VALUES (report_seq.NEXTVAL, #{tablename}, #{reportedNumber}, #{memberIdx}, #{memberIdx2})
+	</insert>
+
+	<insert id="usedBoardRequest" parameterType="com.sp.app.model.UsedRequest">
+		INSERT INTO usedRequest (board_num, writer, customer, price, content, progress) VALUES (#{num}, #{writer}, #{customer}, #{price}, #{content}, 0)
+	</insert>
+
+	<select id="isArticleRequested" parameterType="Long" resultType="com.sp.app.model.UsedRequest">
+		SELECT * FROM usedRequest WHERE board_num = #{num}
+	</select>
+
+
+	<insert id="insertReply" parameterType="com.sp.app.model.Reply">
+		INSERT INTO usedBoardReply (num, memberIdx, board_num, content, reg_date, block, parent_num)
+			VALUES (used_board_reply_seq.NEXTVAL, #{memberIdx}, #{board_num}, #{content}, SYSDATE, 0, #{parent_num})
+	</insert>
+
+	<select id="listReply" parameterType="map" resultType="com.sp.app.model.Reply">
+		SELECT ubr.num num, ubr.memberIdx memberIdx, ubr.board_num board_num, content, ubr.reg_date reg_date, m.nickName nickName, NVL(replyCount, 0) replyCount
+		FROM usedBoardReply ubr
+		JOIN member1 m ON ubr.memberIdx = m.memberIdx AND m.block = 0
+		LEFT OUTER JOIN (
+			SELECT parent_Num, COUNT(*) replyCount
+			FROM usedBoardReply
+			WHERE parent_Num != 0 AND block = 0
+			GROUP BY parent_Num
+		) a ON ubr.num = a.parent_Num
+		WHERE ubr.block = 0 AND ubr.parent_Num = 0 AND board_num = #{num}
+		ORDER BY ubr.num DESC
+		OFFSET #{offset} ROWS FETCH FIRST #{size} ROWS ONLY
+	</select>
+
+	<select id="replyCount" parameterType="Long" resultType="Integer">
+		SELECT COUNT(*)
+		FROM usedBoardReply
+		WHERE block = 0 AND parent_Num = 0 AND board_num = #{num}
+	</select>
+
+	<select id="findWriter">
+		SELECT memberIdx
+		FROM usedBoard
+		WHERE board_num = #{num}
+	</select>
+
+	<update id="deleteReply" parameterType="map">
+		DELETE FROM usedBoardReply
+		WHERE num = #{num}
+		<if test="mode == 'reply'">
+			OR parent_num = #{num}
+		</if>
+	</update>
+
+	<select id="listReplyAnswer" parameterType="Long" resultType="com.sp.app.model.Reply">
+		SELECT ubr.num num, ubr.memberIdx memberIdx, ubr.board_num board_num, content, ubr.reg_date reg_date, m.nickName nickName, ubr.parent_Num parent_Num
+		FROM usedBoardReply ubr
+		JOIN member1 m ON ubr.memberIdx = m.memberIdx AND m.block = 0
+		WHERE ubr.block = 0 AND parent_Num = #{num}
+		ORDER BY ubr.num ASC 
+	</select>
+
+	<select id="replyAnswerCount" parameterType="Long" resultType="Integer">
+		SELECT COUNT(*)
+		FROM usedBoardReply
+		WHERE block = 0 AND parent_Num = #{num}
+	</select>
+	
+	<!-- memberIdx 별 글 갯수 -->
+	<select id="boardCount" parameterType="long" resultType="int">
+	    SELECT COUNT(*) 
+	    FROM usedBoard 
+	    WHERE memberIdx = #{memberIdx}
+	</select>
+</mapper>

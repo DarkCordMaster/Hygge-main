@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.FundingProjectMapper">
+
+	<!-- 프로젝트 상세화면 - 전반적인 메인 정보들 -->
+	<select id="fundingProduct" parameterType="Long" resultType="com.sp.app.model.Funding">
+		SELECT 
+		    p.num, c.name, m.block, pr.title, pr.target, pr.term, pr.thumbnail,
+		    pr.delivery_info, m.nickname, m.memberIdx, m.profile_img,
+		    p.start_date, p.end_date,
+		    NVL(payment_summary.total_amount, 0) AS total_amount,
+		    (SELECT COUNT(1)
+		     FROM follow f
+		     WHERE f.following = pr.MEMBERIDX) AS followingCount,
+		     maker.makerName
+		FROM project p
+		JOIN projectRequest pr ON p.num = pr.num
+		JOIN category c ON pr.category_num = c.category_num
+		JOIN MEMBERAUTHORITY ma ON ma.MEMBERIDX = pr.MEMBERIDX
+		JOIN member1 m ON m.memberidx = ma.MEMBERIDX
+		LEFT JOIN (
+		    SELECT pd.num, SUM(s.sum) AS total_amount
+		    FROM product pd
+		    LEFT JOIN sales s ON pd.product_num = s.product_num
+		    WHERE pd.num = #{num}
+		    GROUP BY pd.num
+		) payment_summary ON p.num = payment_summary.num
+		LEFT OUTER JOIN maker ON pr.memberIdx = maker.memberIdx
+		WHERE p.num = #{num}
+	</select>
+
+	<!-- 프로젝트 상세화면 - 상품구성 -->
+	<select id="detailProduct" parameterType="map" resultType="com.sp.app.model.Product">
+		SELECT p.product_num, p.title, p.price, p.detail, p.num
+		FROM product p
+		JOIN projectRequest pr ON p.num = pr.num
+		WHERE p.num = #{num}
+	</select>
+
+	<!-- 프로젝트 좋아요 -->
+	<select id="projectLikeCount" parameterType="Long" resultType="Integer">
+		SELECT COUNT(*)
+		FROM ProjectLike
+		WHERE num = #{num}
+	</select>
+
+	<insert id="insertProjectLikeCount" parameterType="map">
+		INSERT INTO ProjectLike(num, memberIdx) VALUES (#{num}, #{memberIdx})
+	</insert>
+
+	<delete id="deleteProjectLikeCount" parameterType="map">
+		DELETE FROM ProjectLike WHERE num=#{num} AND memberIdx=#{memberIdx}
+	</delete>
+
+	<select id="userFundingLiked" parameterType="map" resultType="int">
+		SELECT NVL(COUNT(*), 0)
+		FROM ProjectLike
+		WHERE num = #{num} AND memberIdx = #{memberIdx}
+	</select>
+	
+	<!-- 프로젝트 상세화면 - 메이커 팔로우 -->
+	<insert id="insertFollowing" parameterType="map">
+	    INSERT INTO Follow(following, follower) VALUES (#{makerIdx}, #{memberIdx})
+	</insert>
+	
+	<delete id="deleteFollowing" parameterType="map">
+	    DELETE FROM Follow WHERE following=#{makerIdx} AND follower=#{memberIdx}
+	</delete>
+	
+	<!-- 사용자가 메이커를 팔로우 중인지 -->
+	<select id="userFollowing" parameterType="map" resultType="int">
+	    SELECT NVL(COUNT(*), 0)
+	    FROM Follow
+	    WHERE following=#{makerIdx} AND follower=#{memberIdx}
+	</select>
+
+</mapper>

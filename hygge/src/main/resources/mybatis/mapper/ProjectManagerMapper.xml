@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sp.app.mapper.ProjectManagerMapper">
+	<select id="listProject" parameterType="map"
+		resultType="com.sp.app.model.ProjectManager">
+		SELECT pr.num, pr.memberIdx, pr.request_date, pr.accept_date, pr.title,
+		pr.business, pr.content, pr.target, pr.term, pr.thumbnail,
+		pr.category_num, pr.accept_return, pr.return_reason,
+		m.name
+		FROM projectRequest pr
+		INNER JOIN member1 m ON pr.memberIdx = m.memberIdx
+		WHERE pr.memberIdx = #{memberIdx}
+	</select>
+
+	<select id="dataCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*), 0)
+		FROM ProjectRequest p
+		INNER JOIN member1 m ON p.memberIdx = m.memberIdx
+		<where>
+			<if test="kwd != null and kwd != ''">
+				<choose>
+					<when test="schType == 'title'">
+						AND INSTR(p.title, #{kwd}) > 0
+					</when>
+					<when test="schType == 'request_date'">
+						AND TO_CHAR(p.request_date, 'YYYY-MM-DD') = #{kwd}
+					</when>
+					<when test="schType == 'accept_date'">
+						AND TO_CHAR(p.accept_date, 'YYYY-MM-DD') = #{kwd}
+					</when>
+					<when test="schType == 'category'">
+						AND p.category_num = #{kwd}
+					</when>
+					<when test="schType == 'name'">
+						AND INSTR(m.name, #{kwd}) > 0
+					</when>
+				</choose>
+			</if>
+		</where>
+	</select>
+	
+	<select id="b_dataCount" parameterType="map" resultType="Integer">
+    SELECT COUNT(DISTINCT b.mkboard_Num)
+    FROM MakerBoard b
+    WHERE b.MAKERIDX = #{makerIdx, jdbcType=NUMERIC}
+</select>
+	
+	<update id="approveProject" parameterType="Long">
+		UPDATE ProjectRequest SET
+		accept_return = 1,
+		accept_date = SYSDATE
+		WHERE num = #{num}
+	</update>
+
+	<update id="rejectProject" parameterType="map">
+		UPDATE ProjectRequest SET
+		accept_return = 0,
+		return_reason = #{reason},
+		accept_date = SYSDATE
+		WHERE num = #{num}
+	</update>
+<select id="listboard" parameterType="map"
+	resultType="com.sp.app.model.ProjectManager">
+   SELECT 
+        b.mkboard_Num,
+        MAX(b.TITLE) AS title,
+        MAX(DBMS_LOB.SUBSTR(b.CONTENT, 4000, 1)) AS content,
+        MAX(b.CATEGORY) AS category,
+        MAX(b.MAKERIDX) AS MAKERIDX,
+        MAX(maker.makername) AS name,
+        NVL(COUNT(l.MEMBERIDX), 0) AS likeCount,
+        MAX(mf.s_filename) AS sfileName
+    FROM MakerBoard b
+    LEFT JOIN MakerBoardLike l ON b.mkboard_Num = l.mkboard_Num
+    LEFT JOIN Maker maker ON b.MAKERIDX = maker.memberIdx
+    LEFT JOIN makerFile mf ON b.mkboard_Num = mf.mkboard_num 
+    WHERE b.MAKERIDX = #{memberIdx, jdbcType=NUMERIC}
+    GROUP BY b.mkboard_Num
+    ORDER BY b.mkboard_Num DESC
+</select>
+
+<select id="makerBoardSeq" resultType="Long">
+SELECT maker_board_seq.NEXTVAL FROM dual
+</select>
+
+<select id="listFile" parameterType="Long" resultType="com.sp.app.model.ProjectManager">
+SELECT  file_Num, mkBoard_num, s_filename
+FROM makerFile
+WHERE mkBoard_num = #{mkboard_Num}
+</select>
+
+<insert id="insertBoard" parameterType="com.sp.app.model.ProjectManager">
+    INSERT INTO MakerBoard (mkboard_Num, TITLE, CONTENT, CATEGORY, MAKERIDX)
+    VALUES (#{mkboard_Num}, #{title}, #{content}, #{category,jdbcType=VARCHAR}, #{makerIdx})
+</insert>
+
+<insert id="insertFile" parameterType="com.sp.app.model.ProjectManager">
+    INSERT INTO makerFile (FILE_NUM,S_FILENAME, MKBOARD_NUM)
+    VALUES (maker_file_seq.NEXTVAL, #{sfileName}, #{mkboard_Num,jdbcType=NUMERIC})
+</insert>
+
+<delete id="deleteFile" parameterType="Long">
+		DELETE FROM makerFile WHERE mkboard_Num = #{mkboard_Num}
+	</delete>
+<delete id="deleteBoard" parameterType="Long">
+		DELETE FROM makerBoard WHERE mkboard_Num = #{mkboard_Num}
+</delete>
+
+<update id="updateBoard" parameterType="com.sp.app.model.ProjectManager">
+    UPDATE MakerBoard
+    SET TITLE = #{title},
+        CONTENT = #{content},
+        CATEGORY = #{category}
+    WHERE mkboard_Num = #{mkboard_Num}
+</update>
+
+
+
+
+<select id="findById" parameterType="long" resultType="com.sp.app.model.ProjectManager">
+    SELECT *
+    FROM MakerBoard
+    WHERE mkboard_Num = #{mkboard_Num}
+</select>
+</mapper>

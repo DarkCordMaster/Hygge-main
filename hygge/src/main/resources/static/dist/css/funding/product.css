@@ -1,0 +1,183 @@
+@charset "UTF-8";
+
+.main-container{
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+/* 펀딩 메인 정보 */
+.title {
+	display: flex;
+    flex-direction: column; /* 아이콘과 텍스트를 세로로 배치 */
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center;     /* 수직 중앙 정렬 */
+    margin-top: 130px;
+}
+.title p {
+	font-size: 20px;
+	border: 1px solid #757575;
+	border-radius: 1px;
+	background: #F5F5F5;
+	padding: 3px 9px;
+	display: inline-block; /* 내용에 맞게 가로 너비 자동 조정 */
+    text-align: center; /* 텍스트 가운데 정렬 */
+}
+.title h3{
+	font-size: 40px;
+	font-weight: bold;
+	margin-bottom: 65px;
+}
+
+.product-img {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+}
+.product-img > img{
+	width: 650px;
+	height: 650px;
+}
+
+.first-info {
+	margin-top: 55px;
+}
+.a, .b, .c { line-height: 60%; }
+
+#price, #period, #sponsor {
+	font-size: 30px;
+	margin-bottom: 40px; 
+}
+.punding-goal {
+	color: #ED2323;
+	display: inline-block; /* 내용에 맞게 가로 너비 자동 조정 */
+    text-align: center; /* 텍스트 가운데 정렬 */
+    padding: 9px 6px; 
+    background-color: #FFEEEE;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.d {
+	font-size: 18px;
+	line-height: 180%;
+}
+
+/* 좋아요 버튼 - 글씨 */
+.like-btn {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 1px;
+   padding: 8px 16px;
+   border: none;
+   background: transparent; /* 배경 투명으로 */
+   cursor: pointer;
+   transition: all 0.2s;
+}
+.like-btn.active {
+   color: #000;
+}
+/* 좋아요 - 수 */
+.like-count {
+   margin-top: 1px;
+   font-size: 16px;
+}
+/* 좋아요 - 아이콘 */
+.like-btn.active i {
+   color: #ff0000;
+}
+.like-btn i {
+   font-size: 30px;
+}
+
+#buyBtn {
+	background: #678D06;
+	color: #fff;
+	border-radius: 5px;
+	border: 1px solid #fff;
+	width: 225px;
+	height: 50px;
+	font-size: 19px;
+	margin-top: 15px;
+}
+
+/* 프로젝트계획|후기 선택 */
+.f-select p {
+	margin-top: 20px;
+	font-size: 20px;
+	font-weight: 500px;
+	text-decoration: none;
+}
+.f-select:hover p {
+	font-weight: bold;
+	text-decoration-thickness: 6px;
+	text-underline-offset : 20px;
+	text-decoration-color: #82B10C;
+	cursor: pointer;
+}
+.f-select.active p {
+	font-weight: bold;
+	text-decoration: underline;
+	text-decoration-thickness: 6px;
+	text-underline-offset : 20px;
+	text-decoration-color: #82B10C;
+	cursor: pointer;
+}
+
+/* 공개예정 프로젝트 */
+.coming-soon-notice {
+    width: 100%;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 18px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.coming-soon-text {
+    color: #212529;
+    font-size: 20px;
+    margin: 0;
+}
+
+.coming-soon-badge {
+    display: inline-block;
+    background-color: #ff6b6b;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+.coming-soon-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.coming-soon-category {
+    color: #000;
+    display: inline-block;
+    font-size: 16px;
+    margin-top: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 2px;
+    padding: 4px 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+
+/* 추가 */
+.second-info p.d:last-child {
+    margin-top: 35px; /* 마지막 항목(발송 시작일)에 상단 여백 추가 */
+}
+#qainfo {
+	margin-bottom: 40px !important;
+}
